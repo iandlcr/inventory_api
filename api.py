@@ -5,6 +5,36 @@ from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Nullable
 from flask_restful import Resource, Api, fields, marshal_with, reqparse, abort
+from functools import wraps
+from flask import request, jsonify
+from dotenv import load_dotenv
+import os
+
+
+load_dotenv()
+
+
+valid_keys = [
+    os.environ.get('LCBO_API_KEY_ADMIN'),
+    os.environ.get('LCBO_API_KEY_READ'),
+    os.environ.get('LCBO_API_KEY_WRITE'),
+]
+
+
+def require_api_key(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        api_key = request.headers.get('X-API-Key')
+
+        if not api_key:
+            return {'message': 'API key required'}, 401
+
+        if api_key not in valid_keys:
+            return {'message': 'Invalid API key'}, 401
+        
+        return f(*args, **kwargs)
+    return decorated_function
+
 
 # Initialize Flask application
 app = Flask(__name__)
@@ -55,6 +85,7 @@ class Items(Resource):
         items = ItemModel.query.all()
         return items
     
+    @require_api_key
     @marshal_with(itemFields)
     def post(self):
         """POST endpoint to create a new item"""
@@ -98,6 +129,7 @@ class Item(Resource):
             abort(404, message="item not found")
         return item
 
+    @require_api_key
     @marshal_with(itemFields)
     def patch(self, name, volume, price):
         """PATCH endpoint to update an existing item"""
@@ -124,6 +156,7 @@ class Item(Resource):
         db.session.commit()
         return item
 
+    @require_api_key
     @marshal_with(itemFields)
     def delete(self, name, volume, price):
         """DELETE endpoint to remove an item"""
