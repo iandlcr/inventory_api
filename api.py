@@ -9,6 +9,8 @@ from functools import wraps
 from flask import request, jsonify
 from dotenv import load_dotenv
 import os
+from psycopg2 import Binary 
+
 
 
 load_dotenv()
@@ -40,7 +42,7 @@ def require_api_key(f):
 app = Flask(__name__)
 
 # Configure SQLite database
-app.config['SQLALCHEMY_DATABASE_URI'] =  'sqlite:///database.db'
+app.config['SQLALCHEMY_DATABASE_URI'] =  'postgresql://inventory_9ruj_user:PxHfewxOKRwUgrZxd0pobrObiPjxinEn@dpg-d1tt3mk9c44c73cdo5s0-a/inventory_9ruj'
 
 # Initialize SQLAlchemy with the Flask app
 db = SQLAlchemy(app)
